@@ -25,13 +25,8 @@ d("database", () => {
     await admin.unsafe(`create database ${dbName}`);
     const url = new URL(ADMIN!); url.pathname = `/${dbName}`;
     await migrate(url.toString());
-    const a2 = postgres(url.toString(), { max: 1, onnotice: () => undefined });
-    await a2.unsafe(`do $$ begin if not exists (select from pg_roles where rolname = 'spark_app') then create role spark_app login password 'app'; end if; end $$;
-      grant usage on schema public to spark_app; grant select, insert, update, delete on all tables in schema public to spark_app;
-      grant usage, select on all sequences in schema public to spark_app;`);
-    await a2.end();
-    const app = new URL(url); app.username = "spark_app"; app.password = "app";
-    setClient(postgres(app.toString(), { max: 3, prepare: false, onnotice: () => undefined }));
+    // The app connects as the SUPERUSER here on purpose: isolation must hold via SET LOCAL ROLE spark_rls.
+    setClient(postgres(url.toString(), { max: 3, prepare: false, onnotice: () => undefined }));
 
     const r = await A.setupPlatform({ orgName: "Matchlight", name: "Op Erator", email: "op@matchlight.test", password: "correct horse battery" });
     if ("error" in r) throw new Error(r.error);
@@ -144,6 +139,11 @@ d("database", () => {
     expect(await R.recordRun(globex.id, globexAdmin.id, { runId: crypto.randomUUID(), processId: "demo-change-owner", version: 1, startedAt: new Date().toISOString(), status: "completed", steps: [] })).toEqual({ error: "Unknown coach or version." });
   });
 
+  it("app transactions run as a role that cannot bypass RLS", async () => {
+    const r = await withOrg(acme.id, async (tx) => (await tx<{ u: string; b: boolean }[]>`select current_user as u, rolbypassrls as b from pg_roles where rolname = current_user`)[0]);
+    expect(r).toEqual({ u: "spark_rls", b: false });
+  });
+
   it("RLS blocks raw cross-org writes even if app code forgets a filter", async () => {
     await expect(withOrg(globex.id, (tx) => tx`insert into brand_docs (org_id, name, kind, body) values (${acme.id}, 'x.md', 'style', 'x')`)).rejects.toThrow(/row-level security/);
     const n = await withOrg(globex.id, async (tx) => (await tx`update processes set title = 'pwned' returning id`).length);
@@ -152,7 +152,7 @@ d("database", () => {
     expect(seen).toBe(1);
     // No org context at all: nothing is visible.
     expect(await system(async () => 1)).toBe(1);
-    const none = await (await import("./client.ts")).db().begin(async (tx) => (await tx`select id from processes`).length);
+    const none = await (await import("./client.ts")).db().begin(async (tx) => { await tx`set local role spark_rls`; return (await tx`select id from processes`).length; });
     expect(none).toBe(0);
   });
 });

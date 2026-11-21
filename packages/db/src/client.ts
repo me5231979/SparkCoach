@@ -20,6 +20,7 @@ export function setClient(sql: postgres.Sql | null) { client = sql; }
 
 export function withOrg<T>(orgId: string, fn: (tx: Tx) => Promise<T>): Promise<T> {
   return db().begin(async (tx) => {
+    await tx`set local role spark_rls`;
     await tx`select set_config('app.org_id', ${orgId}, true)`;
     return fn(tx);
   }) as Promise<T>;
@@ -27,6 +28,7 @@ export function withOrg<T>(orgId: string, fn: (tx: Tx) => Promise<T>): Promise<T
 
 export function system<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
   return db().begin(async (tx) => {
+    await tx`set local role spark_rls`;
     await tx`select set_config('app.bypass', 'on', true)`;
     return fn(tx);
   }) as Promise<T>;
