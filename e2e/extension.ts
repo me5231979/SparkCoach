@@ -4,10 +4,9 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-const DIST = resolve("apps/extension/dist");
-
 export const test = base.extend<{ context: BrowserContext; sw: Worker; extId: string }>({
-  context: async ({}, use) => {
+  context: async ({}, use, info) => {
+    const DIST = resolve(info.project.name === "platform" ? "apps/extension/dist-platform" : "apps/extension/dist");
     const ctx = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), "spark-e2e-")), {
       channel: "chromium",
       headless: true,

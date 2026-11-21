@@ -115,9 +115,8 @@ async function finishRun(run: R.Run, process: Process & { version?: number }) {
 async function registerContentScripts() {
   if (!PLATFORM || !chrome.scripting) return;
   const c = await get<ContentCache | null>(K.content, null);
-  const all = await chrome.permissions.getAll();
-  const granted = (c?.approvedDomains ?? []).map(patternFor).filter((p) => all.origins?.includes(p) || all.origins?.some((o) => o === p));
-  const matches = [...new Set(granted)];
+  const matches: string[] = [];
+  for (const p of new Set((c?.approvedDomains ?? []).map(patternFor))) if (await chrome.permissions.contains({ origins: [p] })) matches.push(p);
   const existing = await chrome.scripting.getRegisteredContentScripts({ ids: ["spark"] });
   if (existing.length) await chrome.scripting.unregisterContentScripts({ ids: ["spark"] });
   if (matches.length) await chrome.scripting.registerContentScripts([{ id: "spark", matches, js: ["content.js"], runAt: "document_idle", allFrames: true, persistAcrossSessions: true }]);

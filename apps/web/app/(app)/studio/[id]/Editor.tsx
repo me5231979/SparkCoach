@@ -133,7 +133,26 @@ export function Editor({ id, initial, initialErrors, systems, status, version }:
     change({ ...p, steps: [...p.steps, { id: sid, type: "screen", title: "New step", instruction: "Click …", target: { role: "button", name: "" } }] });
   };
   // Step ids follow titles until the coach is first published (learner records refer to ids afterwards).
-  const normalised = (): Process => version > 0 ? p : { ...p, steps: p.steps.map((s, i) => ({ ...s, id: slug(s.title) && !p.steps.slice(0, i).some((x) => slug(x.title) === slug(s.title)) ? slug(s.title) : s.id })) };
+  // Only placeholder ids (step-3, first-step) are renamed, and every reference to them follows.
+  const normalised = (): Process => {
+    if (version > 0) return p;
+    const taken = new Set(p.steps.map((s) => s.id));
+    const rename = new Map<string, string>();
+    for (const s of p.steps) {
+      if (!/^(step-\d+x*|first-step)$/.test(s.id) || !slug(s.title)) continue;
+      let id = slug(s.title), n = 2;
+      while (taken.has(id)) id = `${slug(s.title)}-${n++}`;
+      taken.delete(s.id); taken.add(id); rename.set(s.id, id);
+    }
+    if (!rename.size) return p;
+    const r = (id?: string) => (id && rename.get(id)) || id;
+    return {
+      ...p,
+      steps: p.steps.map((s) => ({ ...s, id: r(s.id)! })),
+      ...(p.callouts ? { callouts: p.callouts.map((c) => ({ ...c, when: { ...c.when, ...(c.when.step ? { step: r(c.when.step)! } : {}), ...(c.when.afterStep ? { afterStep: r(c.when.afterStep)! } : {}) } })) } : {}),
+      ...(p.reminders ? { reminders: p.reminders.map((m) => ({ ...m, afterStep: r(m.afterStep)! })) } : {}),
+    };
+  };
   const callouts = p.callouts ?? [];
   const setCallouts = (c: Callout[]) => change({ ...p, callouts: c.length ? c : undefined } as Process);
 

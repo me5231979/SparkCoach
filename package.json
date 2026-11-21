@@ -4,8 +4,13 @@
   "version": "0.1.0",
   "description": "Spark by Matchlight: a platform for building screen-aware coaches that teach a company's own processes",
   "type": "module",
-  "workspaces": ["apps/*", "packages/*"],
-  "engines": { "node": ">=22" },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
@@ -15,13 +20,15 @@
     "dev:web": "npm run dev -w @spark/web",
     "build:web": "npm run build -w @spark/web",
     "fixtures": "node fixtures/serve.mjs",
-    "e2e": "npm run build:ext && playwright test --trace off",
-    "e2e:privacy": "npm run build:ext && playwright test e2e/privacy.spec.ts --trace off"
+    "e2e": "npm run build:ext && npm run e2e:build-platform && playwright test --trace off",
+    "e2e:privacy": "npm run build:ext && playwright test e2e/privacy.spec.ts --project offline --trace off",
+    "e2e:build-platform": "SPARK_API_ORIGIN=http://localhost:3100 SPARK_DEV_HOSTS=localhost:4310 SPARK_OUT=dist-platform npm run build -w @spark/extension && npm run build:web"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
     "@types/node": "^22.20.5",
     "typescript": "^5.9.3",
-    "vitest": "^5.1.1"
+    "vitest": "^5.1.1",
+    "postgres": "^3.4.9"
   }
 }

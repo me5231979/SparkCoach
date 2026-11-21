@@ -15,8 +15,8 @@ export const themeFrom = (c: ContentCache | null): Theme => c?.theme ?? DEFAULT_
 /** Exact host match against approved systems (no wildcards). */
 export const hostAllowed = (host: string, systems: string[]) => systems.some((s) => s.toLowerCase() === host.toLowerCase());
 
-/** Chrome match pattern for an approved host (ports are not part of match patterns). */
+/** Chrome match pattern for an approved host (keeps the port, e.g. localhost:4310). */
 export const patternFor = (h: string) => {
   const host = h.split(":")[0]!;
-  return `${host === "localhost" || /^127\./.test(host) ? "http" : "https"}://${host}/*`;
+  return `${host === "localhost" || /^127\./.test(host) ? "http" : "https"}://${h}/*`;
 };
