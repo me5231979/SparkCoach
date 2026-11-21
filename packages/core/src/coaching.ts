@@ -1,6 +1,5 @@
 // The coaching rules: four support levels, the throttle that moves a step between them, and the questions the
 // app asks. Everything here is built from the published process and decided by code. The AI never sets a level.
-// Ported from HCM Coach extension/src/lib/coach.ts (tested behavior), adapted to Spark's process format.
 import type { Process, Question, ScreenStep, Step } from "./types.ts";
 
 export type Level = 1 | 2 | 3 | 4;

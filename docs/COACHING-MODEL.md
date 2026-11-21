@@ -50,7 +50,7 @@ function throttle(s: PartState, outcome: "right" | "miss" | "less"): PartState {
 - A level-change note shows on advance: "Less help next time: Prompt" / "More help next time: Guide".
 - **Refresher (later phase):** if a process isn't run for N days (default 60), each step drops one level on next run.
 
-Port this exactly from HCM Coach `extension/src/lib/coach.ts`; it is tested there.
+Implemented in `packages/core/src/coaching.ts` with unit tests.
 
 ## 5. Checks
 

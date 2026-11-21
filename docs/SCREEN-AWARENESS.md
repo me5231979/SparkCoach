@@ -42,12 +42,11 @@ If no match: the panel says "I can't find this on the page you're on", and the m
 monitoring (Studio S6).
 
 **Traversal:** walks open shadow roots and same-origin iframes; cross-origin iframes need the frame's domain on the
-approved list (the content script runs there too and answers via messaging). Port `accName`, `findByRole`,
-`findField` from HCM Coach `extension/src/lib/dom.ts` and extend with `context`, shadow DOM and frames.
+approved list (the content script runs there too and answers via messaging). Implemented in `packages/dom/src/targeting.ts`.
 
 ## 3. Step completion checks
 
-Deterministic checks evaluated in the content script (port and extend HCM Coach `extension/src/lib/checks.ts`):
+Deterministic checks evaluated in the content script (`packages/dom/src/checks.ts`):
 
 | Check | Passes when |
 |---|---|
@@ -71,7 +70,7 @@ the panel and records a miss at On call/Off levels.
 
 A spotlight (dimmed page with a cut-out and a pulsing ring) plus a small callout bubble ("Click Save"). Rendered in a
 closed shadow root to avoid style collisions; repositions on scroll/resize; never blocks clicks on the target.
-Hidden at On call/Off unless the learner asks for help. Port HCM Coach `extension/src/lib/overlay.ts`.
+Hidden at On call/Off unless the learner asks for help. Implemented in `packages/dom/src/overlay.ts`.
 
 ## 6. The Recorder (Studio S1)
 

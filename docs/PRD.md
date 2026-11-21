@@ -17,8 +17,10 @@ prove they can do the work**: from showing every step, to prompting, to standing
 that give the same walkthrough forever, Spark's goal is a person who can do the process without it, and it
 produces the evidence that they can.
 
-Matchlight builds Spark and delivers it to each customer for their unique processes: HR, finance, IT service,
-procurement, customer operations, anywhere people run multi-step processes across web systems.
+Spark is a **platform for making and deploying these coaches**. Each customer builds coaches for its own processes
+in Spark Studio (record the process once, AI drafts the words, the author approves) and publishes them to its people,
+who run them in the Spark extension. It works for HR, finance, IT service, procurement, customer operations: anywhere
+people run multi-step processes across web systems. Matchlight can also build a customer's first coaches as a service.
 
 ## 2. Problem
 
@@ -77,7 +79,7 @@ first, IT second.
 ## 6. Scope
 
 ### 6.1 MVP (pilot-ready)
-1. Learner extension with screen-aware coaching on **two systems** (recommended Oracle Cloud HCM + UKG Pro).
+1. Learner extension with screen-aware coaching on **two systems** (chosen with the first pilot customer).
 2. Coaching model: four support levels, throttle, how/why checks, say-back, Ask (AI) from customer content only.
 3. Off-screen steps: checkpoint, "tell someone" (with contact cards), call prep and debrief.
 4. Spark Studio: Recorder, step editor, checks editor, publish/versioning, preview.
@@ -202,8 +204,8 @@ those (managed policy or per-org config).
 
 **A2. SSO and roles.** OIDC/SAML; roles learner, author, manager, admin; managers see their teams only.
 
-**A3. AI settings.** Provider (Matchlight-managed Anthropic, or the customer's gateway: Azure OpenAI, Amplify-style
-proxies), model, data-retention statement.
+**A3. AI settings.** Provider (Matchlight-managed Anthropic, or the customer's own gateway, e.g. Azure OpenAI or
+an internal proxy), model, data-retention statement.
 
 ## 8. Non-functional requirements
 
@@ -262,7 +264,7 @@ Annual minimum around $10–15k. Running cost target: < $2 per active learner pe
 ## 13. Open questions
 
 1. Pilot customer and its two systems (and test tenants).
-2. Relationship to the earlier Spark capture tool and the existing `spark`/`matchlight` Vercel projects.
+2. What happens to the older, unrelated `spark` Vercel project (Spark now deploys as `spark-app`).
 3. Default AI provider and data-processing terms.
 4. Whether Spark may offer an optional "show me" mode that plays the step on a sandbox copy (not the live record).
 5. Brand system for Spark (colors, type, logo). This kit uses neutral tokens until it's provided.

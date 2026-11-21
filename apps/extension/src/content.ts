@@ -1,7 +1,7 @@
 // Content script. Inert unless the worker sends a view for this tab, and the tab is on one of the run's approved
 // systems. It resolves the step's target, draws the spotlight, evaluates the completion check, and reports only
 // step ids and booleans. It never reads field values or page text itself: that happens inside @spark/dom, which
-// returns booleans. Ported pattern from HCM Coach extension/src/content.ts.
+// returns booleans.
 import type { Target } from "@spark/core";
 import { Overlay, closestInteractive, matches, resolve, runCheck } from "@spark/dom";
 import { hostAllowed } from "./lib/content.ts";

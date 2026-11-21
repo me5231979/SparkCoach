@@ -63,7 +63,7 @@ Exceptions are explicit and author-confirmed: fixed **app wording** used in chec
 
 ## 6. Compliance path
 
-1. Before first paid customer: security one-pager (port HCM Coach `extension/SECURITY-APP.md` style), privacy policy,
+1. Before first paid customer: security one-pager, privacy policy,
    DPA template, sub-processor list (Vercel, Neon, AI provider, WorkOS, Sentry), pen test of extension + API.
 2. Within 6–9 months: SOC 2 Type I, then Type II. Accessibility conformance report (VPAT) for WCAG 2.2 AA.
 3. Data residency option (US/EU) via region-pinned Vercel functions + database.

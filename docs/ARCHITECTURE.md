@@ -19,7 +19,7 @@
 │  Data: Postgres (Neon via Vercel Marketplace) with row-level security per org    │
 │        Vercel Blob (private) for attachments: job aids, recordings' metadata     │
 │  AI:   provider adapter → Anthropic API (default) | customer gateway (Azure      │
-│        OpenAI, Amplify-style proxies); prompt caching for org content            │
+│        OpenAI, internal proxies); prompt caching for org content            │
 │  Auth: WorkOS (or Auth.js + SAML jackson) for SSO/SCIM; sessions for web         │
 └───────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -72,7 +72,7 @@ edits → publish creates an immutable process version.
 - One public build. `host_permissions` are **optional**; on sign-in the extension requests permission for the org's
   approved domains (`chrome.permissions.request`). Enterprises can pre-grant via managed policy
   (`ExtensionSettings` → `runtime_allowed_hosts`) and force-install.
-- Build-time guard (port from HCM Coach `extension/build.mjs`): exactly the expected `fetch` call sites, only the
+- Build-time guard (`apps/extension/build.mjs`): exactly the expected `fetch` call sites, only the
   Spark API origin in `connect-src`, no `eval`, no remote code. CI fails otherwise.
 
 ## 6. AI provider adapter
@@ -80,8 +80,8 @@ edits → publish creates an immutable process version.
 ```ts
 interface Provider { parse<T>(req: { system: Block[]; messages: Msg[]; schema: ZodType<T>; maxTokens: number }): Promise<{ data: T | null; refused: boolean }>; }
 ```
-Implementations: `anthropic` (structured outputs, prompt caching), `amplify` (Bearer key, `/chat`, JSON in text),
-`azure-openai`. Port the Anthropic + Amplify implementations from HCM Coach `web/app/api/coach/route.ts`.
+Implementations: `anthropic` (structured outputs, prompt caching), `gateway` (a customer's own
+OpenAI-compatible proxy, Bearer key), `azure-openai`.
 
 ## 7. Observability
 

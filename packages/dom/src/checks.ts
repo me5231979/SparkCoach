@@ -1,5 +1,4 @@
 // Step-completion checks, evaluated in the page. Deterministic; only true/false is ever reported.
-// Ported from HCM Coach extension/src/lib/checks.ts and extended with elementGone, clicked, matches and targets.
 import type { Check, Target } from "@spark/core";
 import { fieldMatches, isVisible, phraseVisible, resolve } from "./targeting.ts";
 import { urlMatches } from "./url.ts";

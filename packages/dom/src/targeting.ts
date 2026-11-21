@@ -1,6 +1,6 @@
 // Finds elements the way a person describes them: role + accessible name, or field label, within a context
-// ("the Save button in the Managers section"). Ported from HCM Coach extension/src/lib/dom.ts and extended with
-// context, nth, open shadow roots, same-origin iframes and a fuzzy fallback.
+// ("the Save button in the Managers section"), with context, nth, open shadow roots, same-origin iframes and a
+// fuzzy fallback.
 //
 // PRIVACY: this is the only module allowed to read element text, and only to compute names, labels and headings
 // for matching. It never returns field values or free page text to callers; it returns elements and booleans.

@@ -1,6 +1,6 @@
 // Spotlight (dimmed page with a cut-out and a pulsing ring) plus a small callout bubble ("Click Save").
 // Rendered in a closed shadow root so page styles and scripts cannot touch it. Never blocks clicks on the page.
-// Ported from HCM Coach extension/src/lib/overlay.ts; neutral tokens until the Spark brand is set.
+// Neutral tokens until the Spark brand is set.
 const CSS_TEXT = `
 :host { all: initial; }
 .ring { position: fixed; z-index: 2147483646; pointer-events: none; border-radius: 10px; opacity: 0;

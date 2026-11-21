@@ -1,7 +1,8 @@
 # CLAUDE.md: Spark by Matchlight
 
 Spark is a screen-aware coach in the browser side panel that teaches a company's own processes by doing them in the
-real system, with help that fades as the person proves they can do it. Built by Matchlight, delivered per customer.
+real system, with help that fades as the person proves they can do it. Spark is a platform: companies use Studio to make their own coaches and deploy them to their people. Built by
+Matchlight.
 Read `docs/PRD.md` first; the other docs in `docs/` are the design.
 
 ## Non-negotiables
@@ -17,15 +18,15 @@ Read `docs/PRD.md` first; the other docs in `docs/` are the design.
    counts `fetch` call sites and checks `connect-src`; update the expected count deliberately, never bypass it.
 4. **Tenant isolation.** Every table has `org_id` with RLS; every query runs with the request's org context. Add a
    cross-tenant test for every new data route.
-5. **Spark is not HCM Coach.** Don't reference HCM Coach's server, Vercel project, storage, branding or Vanderbilt
-   content. Ported code is copied and owned here (see `docs/REUSE-FROM-HCM-COACH.md`).
+5. **Spark is a platform, not a coach.** No customer's processes, branding or content live in this repo. Test
+   processes and mock systems under `fixtures/` exist only to exercise the engine.
 
 ## Stack
 
 - npm workspaces monorepo: `apps/extension` (MV3, esbuild, React side panel), `apps/web` (Next.js App Router on
   Vercel), `packages/{core,dom,adapters,ai}`, `e2e/` (Playwright), `fixtures/apps/` (mock systems for CI).
 - Postgres (Neon via Vercel Marketplace) with Drizzle; Vercel Blob (private) for attachments; WorkOS for SSO/SCIM;
-  Anthropic SDK default model `claude-sonnet-5-5` (override per org), Amplify and Azure OpenAI adapters.
+  Anthropic SDK default model `claude-sonnet-5-5` (override per org), adapters for a customer's own AI gateway (e.g. Azure OpenAI).
 - TypeScript strict everywhere. Zod for API input and AI output schemas.
 
 ## Commands (create these in Phase 0)
@@ -42,5 +43,4 @@ panel. Name buttons and fields exactly as the system shows them.
 ## Working rules
 
 - Small, reviewable commits; each with tests. Keep `docs/API.md` and `docs/DATA-MODEL.md` in sync with code.
-- Prefer porting HCM Coach's tested behavior over reinventing it.
 - When unsure about a product decision, check `docs/PRD.md` §13 (open questions) and ask.

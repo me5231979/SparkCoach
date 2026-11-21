@@ -58,7 +58,7 @@ Retention job (daily): delete runs/step_results older than `orgs.retention_days`
 
 ## 3. Process content (`process.schema.json`)
 
-A process version's `content`. Generalized from HCM Coach's `shared/lesson.schema.json`:
+A process version's `content` (`packages/core/process.schema.json`):
 
 - Top level: `id`, `title`, `goal`, `department`, `systems[]` (approved domains it runs on), `estimatedMinutes`,
   `startUrl` (pattern), `steps[]`, `callouts[]` (rules/tips/warnings with `source`), `reminders[]`, `recap`.
