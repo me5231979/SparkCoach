@@ -1,0 +1,27 @@
+{
+  "name": "spark",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Spark by Matchlight: a platform for building screen-aware coaches that teach a company's own processes",
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate": "node --experimental-strip-types packages/core/scripts/validate.ts",
+    "build:ext": "npm run build -w @spark/extension",
+    "dev:web": "npm run dev -w @spark/web",
+    "build:web": "npm run build -w @spark/web",
+    "fixtures": "node fixtures/serve.mjs",
+    "e2e": "npm run build:ext && playwright test --trace off",
+    "e2e:privacy": "npm run build:ext && playwright test e2e/privacy.spec.ts --trace off"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.1"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "id": "demo-change-owner",
+  "title": "Change a record's owner",
+  "goal": "Move a record to a new owner with the right start date and reason.",
+  "department": "Operations",
+  "departments": ["Operations", "Finance"],
+  "systems": ["localhost:4310"],
+  "estimatedMinutes": 4,
+  "startUrl": "/records",
+  "steps": [
+    {
+      "id": "open-record", "type": "screen", "title": "Open the record",
+      "instruction": "In the record list, click View on the record you are changing.",
+      "why": "You change the owner on the record itself, not from the list.",
+      "where": "Records list", "expect": "The record page opens with its details.",
+      "target": { "role": "button", "name": "View", "context": ["Records"], "nth": 0 },
+      "check": { "type": "urlMatches", "pattern": "^/records/[^/]+$" }
+    },
+    {
+      "id": "start-edit", "type": "screen", "title": "Start the change",
+      "instruction": "Click Change Owner.",
+      "why": "The change form keeps a history, so the old owner stays on record.",
+      "where": "Owner section", "expect": "A Change Owner form opens.",
+      "target": { "role": "button", "name": "Change Owner", "context": ["Owner"] },
+      "check": { "type": "elementVisible", "target": { "role": "dialog", "name": "Change Owner" } },
+      "commonMistakes": [{ "when": { "clicked": { "role": "button", "name": "Edit Details" } }, "say": "Edit Details changes the record's fields. The owner is changed with Change Owner." }]
+    },
+    {
+      "id": "effective-date", "type": "screen", "title": "Set the start date",
+      "instruction": "Enter the date the new owner takes over in Effective Date.",
+      "why": "The date controls when reports and approvals move to the new owner.",
+      "where": "Change Owner form", "expect": "Effective Date shows a date.",
+      "target": { "label": "Effective Date", "context": ["Change Owner"] },
+      "check": { "type": "fieldValue", "target": { "label": "Effective Date" }, "notEmpty": true }
+    },
+    {
+      "id": "reason", "type": "screen", "title": "Pick the reason",
+      "instruction": "In Reason, pick Reassignment.",
+      "why": "The reason tells auditors why ownership moved.",
+      "where": "Change Owner form", "expect": "Reason shows Reassignment.",
+      "target": { "label": "Reason", "context": ["Change Owner"] },
+      "check": { "type": "fieldValue", "target": { "label": "Reason" }, "equals": "Reassignment" }
+    },
+    {
+      "id": "new-owner", "type": "screen", "title": "Choose the new owner",
+      "instruction": "Type the new owner's name in New Owner.",
+      "why": "Only the named owner gets the record's tasks from the start date.",
+      "where": "Change Owner form", "expect": "New Owner is filled in.",
+      "target": { "label": "New Owner", "context": ["Change Owner"] },
+      "check": { "type": "fieldValue", "target": { "label": "New Owner" }, "notEmpty": true }
+    },
+    {
+      "id": "submit", "type": "screen", "title": "Submit the change",
+      "instruction": "Click Submit.",
+      "why": "Nothing changes until you submit.",
+      "where": "Bottom of the form", "expect": "A banner says the change was submitted.",
+      "target": { "role": "button", "name": "Submit", "context": ["Change Owner"] },
+      "check": { "type": "textPresent", "text": "Change submitted" }
+    },
+    {
+      "id": "tell-owner", "type": "offline", "title": "Tell the new owner",
+      "instruction": "Let the new owner know the record is theirs from the start date.",
+      "why": "They need to pick up open tasks on day one.",
+      "confirm": "I told them"
+    }
+  ],
+  "callouts": [
+    { "id": "date-rule", "kind": "rule", "say": "Use the first day of a pay period as the effective date.", "source": "Demo policy", "when": { "step": "effective-date" } }
+  ],
+  "recap": { "summary": "You moved a record to a new owner and told them.", "nextSteps": ["Check tomorrow that the record shows the new owner."] }
+}

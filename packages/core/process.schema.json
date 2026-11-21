@@ -1,0 +1,216 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spark.matchlight/schemas/process.schema.json",
+  "title": "Spark process",
+  "description": "A process a customer authors in Spark Studio and learners run in the Spark extension.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "goal", "systems", "steps", "recap"],
+  "properties": {
+    "id": { "$ref": "#/definitions/id" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "goal": { "type": "string", "minLength": 1, "maxLength": 400 },
+    "department": { "type": "string" },
+    "departments": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "systems": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^(localhost|[a-z0-9-]+(\\.[a-z0-9-]+)+)(:[0-9]+)?$" }
+    },
+    "estimatedMinutes": { "type": "integer", "minimum": 1, "maximum": 600 },
+    "startUrl": { "type": "string" },
+    "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/step" } },
+    "callouts": { "type": "array", "items": { "$ref": "#/definitions/callout" } },
+    "reminders": { "type": "array", "items": { "$ref": "#/definitions/reminder" } },
+    "recap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary"],
+      "properties": {
+        "summary": { "type": "string", "minLength": 1 },
+        "nextSteps": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "definitions": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "maxLength": 80 },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "role": { "type": "string" },
+        "name": { "type": "string" },
+        "label": { "type": "string" },
+        "context": { "type": "array", "items": { "type": "string" } },
+        "nth": { "type": "integer", "minimum": 0 },
+        "testId": { "type": "string" },
+        "selector": { "type": "string" },
+        "frame": { "type": "string" }
+      },
+      "anyOf": [
+        { "required": ["role", "name"] },
+        { "required": ["label"] },
+        { "required": ["testId"] },
+        { "required": ["selector"] }
+      ]
+    },
+    "check": {
+      "type": "object",
+      "required": ["type"],
+      "oneOf": [
+        { "additionalProperties": false, "required": ["type", "pattern"],
+          "properties": { "type": { "const": "urlMatches" }, "pattern": { "type": "string", "minLength": 1 } } },
+        { "additionalProperties": false, "required": ["type", "target"],
+          "properties": { "type": { "enum": ["elementVisible", "elementGone", "clicked"] }, "target": { "$ref": "#/definitions/target" } } },
+        { "additionalProperties": false, "required": ["type", "text"],
+          "properties": { "type": { "const": "textPresent" }, "text": { "type": "string", "minLength": 1 } } },
+        { "additionalProperties": false, "required": ["type", "target"],
+          "properties": {
+            "type": { "const": "fieldValue" },
+            "target": { "$ref": "#/definitions/target" },
+            "notEmpty": { "const": true },
+            "equals": { "type": "string" },
+            "matches": { "type": "string" }
+          },
+          "oneOf": [{ "required": ["notEmpty"] }, { "required": ["equals"] }, { "required": ["matches"] }] },
+        { "additionalProperties": false, "required": ["type", "checks"],
+          "properties": { "type": { "enum": ["all", "any"] }, "checks": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/check" } } } }
+      ]
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question", "options", "answer"],
+      "properties": {
+        "question": { "type": "string", "minLength": 1 },
+        "options": { "type": "array", "minItems": 2, "maxItems": 5, "items": { "type": "string", "minLength": 1 } },
+        "answer": { "type": "integer", "minimum": 0 },
+        "why": { "type": "string" }
+      }
+    },
+    "stepBase": {
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "instruction": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "why": { "type": "string", "maxLength": 300 },
+        "departments": { "type": "array", "items": { "type": "string" } },
+        "hints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "type", "title", "instruction"],
+      "oneOf": [
+        { "$ref": "#/definitions/screenStep" },
+        { "$ref": "#/definitions/checkpointStep" },
+        { "$ref": "#/definitions/offlineStep" },
+        { "$ref": "#/definitions/callStep" }
+      ]
+    },
+    "screenStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target"],
+      "properties": {
+        "id": true, "title": true, "instruction": true, "why": true, "departments": true, "hints": true,
+        "type": { "const": "screen" },
+        "where": { "type": "string" },
+        "expect": { "type": "string" },
+        "target": { "$ref": "#/definitions/target" },
+        "check": { "$ref": "#/definitions/check" },
+        "commonMistakes": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["when", "say"],
+            "properties": {
+              "when": { "type": "object", "additionalProperties": false, "required": ["clicked"],
+                "properties": { "clicked": { "$ref": "#/definitions/target" } } },
+              "say": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "quiz": {
+          "type": "object", "additionalProperties": false,
+          "properties": { "how": { "$ref": "#/definitions/question" }, "why": { "$ref": "#/definitions/question" }, "next": { "$ref": "#/definitions/question" } }
+        }
+      },
+      "allOf": [{ "$ref": "#/definitions/stepBase" }]
+    },
+    "checkpointStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "confirm"],
+      "properties": {
+        "id": true, "title": true, "instruction": true, "why": true, "departments": true, "hints": true,
+        "type": { "const": "checkpoint" },
+        "confirm": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [{ "$ref": "#/definitions/stepBase" }]
+    },
+    "offlineStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "confirm"],
+      "properties": {
+        "id": true, "title": true, "instruction": true, "why": true, "departments": true, "hints": true,
+        "type": { "const": "offline" },
+        "confirm": { "type": "string", "minLength": 1 },
+        "contactRef": { "type": "string" },
+        "allowSkip": { "type": "object", "additionalProperties": false, "required": ["label"], "properties": { "label": { "type": "string" } } }
+      },
+      "allOf": [{ "$ref": "#/definitions/stepBase" }]
+    },
+    "callStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "contactRef", "prep", "debrief"],
+      "properties": {
+        "id": true, "title": true, "instruction": true, "why": true, "departments": true, "hints": true,
+        "type": { "const": "call" },
+        "contactRef": { "type": "string" },
+        "prep": {
+          "type": "object", "additionalProperties": false, "required": ["goal", "opener"],
+          "properties": {
+            "goal": { "type": "string" },
+            "opener": { "type": "string" },
+            "pushbacks": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["if", "try"],
+              "properties": { "if": { "type": "string" }, "try": { "type": "string" } } } },
+            "doThis": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "debrief": { "type": "object", "additionalProperties": false, "required": ["rubricRef"], "properties": { "rubricRef": { "type": "string" } } }
+      },
+      "allOf": [{ "$ref": "#/definitions/stepBase" }]
+    },
+    "callout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "say", "when"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "kind": { "enum": ["rule", "tip", "warning"] },
+        "say": { "type": "string", "minLength": 1 },
+        "source": { "type": "string" },
+        "when": {
+          "type": "object", "additionalProperties": false, "minProperties": 1,
+          "properties": { "step": { "type": "string" }, "afterStep": { "type": "string" }, "department": { "type": "string" } }
+        }
+      }
+    },
+    "reminder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "afterStep", "delay", "say"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "afterStep": { "type": "string" },
+        "delay": { "type": "string", "pattern": "^[0-9]+[mhd]$" },
+        "say": { "type": "string", "minLength": 1 },
+        "contactRef": { "type": "string" }
+      }
+    }
+  }
+}
