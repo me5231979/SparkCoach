@@ -1,0 +1,9 @@
+{
+  "name": "@spark/db",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit -p .", "migrate": "node --experimental-strip-types --no-warnings migrate.mjs" },
+  "dependencies": { "@spark/core": "*", "postgres": "^3.4.9" }
+}
