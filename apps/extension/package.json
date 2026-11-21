@@ -1,0 +1,22 @@
+{
+  "name": "@spark/extension",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node --experimental-strip-types --no-warnings build.mjs",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@spark/core": "*",
+    "@spark/dom": "*",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "esbuild": "^0.28.2"
+  }
+}
