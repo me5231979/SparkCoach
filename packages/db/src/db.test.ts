@@ -138,6 +138,7 @@ d("database", () => {
     expect(raw).not.toContain("xxxx");
     expect((await O.aiSettings(acme.id))?.keyHint).toMatch(/^sk-ant-…xxxx$/);
     expect(await O.aiCredentials(globex.id, "sk-ant-platform")).toBeNull(); // another org never gets Acme's key
+    expect(await O.aiCredentials(op.orgId, "sk-ant-platform")).toMatchObject({ source: "managed" }); // the operator's own org
   });
 
   // ── Tenant isolation: every data route gets a cross-tenant test (CLAUDE.md §4) ──────────────────────────────────

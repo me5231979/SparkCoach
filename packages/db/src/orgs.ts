@@ -106,15 +106,16 @@ export async function setAiSettings(orgId: string, actor: string, s: { model?: s
 
 /**
  * The credentials an AI call for this org uses: the customer's own key first. The platform key only when the
- * operator switched on the Managed AI add-on for them. Otherwise null: AI features say how to add a key.
+ * operator switched on the Managed AI add-on for them (and for the operator's own org). Otherwise null: AI features say how to add a key.
  */
 export async function aiCredentials(orgId: string, platformKey: string | undefined): Promise<{ apiKey: string; model: string | null; source: "customer" | "managed" } | null> {
   const { open } = await import("./secrets.ts");
-  const r = await system(async (tx) => (await tx<{ ai_key_enc: string | null; ai_model: string | null; features: Features }[]>`
-    select ai_key_enc, ai_model, features from orgs where id = ${orgId}`)[0]);
+  const r = await system(async (tx) => (await tx<{ ai_key_enc: string | null; ai_model: string | null; features: Features; is_operator: boolean }[]>`
+    select ai_key_enc, ai_model, features, is_operator from orgs where id = ${orgId}`)[0]);
   if (!r) return null;
   if (r.ai_key_enc) return { apiKey: open(r.ai_key_enc, orgId), model: r.ai_model, source: "customer" };
-  if (r.features?.managedAi && platformKey) return { apiKey: platformKey, model: r.ai_model, source: "managed" };
+  // The operator's own org (the company running Spark) and customers with Managed AI use the platform key.
+  if ((r.features?.managedAi || r.is_operator) && platformKey) return { apiKey: platformKey, model: r.ai_model, source: "managed" };
   return null;
 }
 
