@@ -3,6 +3,9 @@ import { requireCtx } from "../../../lib/session";
 import { createBlank } from "./actions";
 import { NewFromNotes } from "./NewFromNotes";
 
+// AI drafting from long documents and many screenshots can take a few minutes.
+export const maxDuration = 300;
+
 export default async function Studio({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const c = await requireCtx("author");
   const { error } = await searchParams;
@@ -24,7 +27,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
           )) : <tr><td colSpan={4} className="muted">No coaches yet. Draft one from your notes below.</td></tr>}
         </tbody>
       </table>
-      <NewFromNotes systems={c.org.approvedDomains} />
+      <NewFromNotes systems={c.org.approvedDomains} orgId={c.org.id} />
       <form action={createBlank} className="card row">
         <label htmlFor="blank" style={{ margin: 0 }}>Or start blank</label>
         <input id="blank" name="title" placeholder="Process name" style={{ flex: 1 }} />

@@ -1,7 +1,8 @@
 "use server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { draftProcess, explain } from "@spark/ai";
+import { draftProcess, explain, type Source } from "@spark/ai";
+import { toSources, type Uploaded } from "../../../lib/sources";
 import { creds, NO_KEY } from "../../../lib/ai";
 import type { Process } from "@spark/core";
 import { validateProcess } from "@spark/core/validate";
@@ -28,7 +29,12 @@ export async function createFromNotes(_prev: { error?: string } | null, form: Fo
   const systems = form.getAll("systems").map(String).filter((s) => c.org.approvedDomains.includes(s));
   let id: string;
   try {
+    // Files: uploaded ones (private Blob, converted then deleted) and text read in the browser (.md, .txt, captions).
+    const uploaded = JSON.parse(String(form.get("uploaded") ?? "[]")) as Uploaded[];
+    const texts = JSON.parse(String(form.get("texts") ?? "[]")) as { name: string; text: string }[];
+    const sources: Source[] = [...texts.map((t) => ({ kind: "text" as const, name: t.name, text: t.text })), ...(await toSources(uploaded, c.org.id))];
     const { process } = await draftProcess({
+      sources,
       notes: String(form.get("notes") ?? ""), title: String(form.get("title") ?? "").trim() || undefined,
       systems: systems.length ? systems : c.org.approvedDomains.slice(0, 1),
       brandDocs: await listBrandDocs(c.org.id), displayName: c.org.branding.displayName, apiKey: ai.apiKey, ...(ai.model ? { model: ai.model } : {}),

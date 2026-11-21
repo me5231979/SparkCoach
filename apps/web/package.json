@@ -16,7 +16,10 @@
     "react-dom": "^19.3.1",
     "@spark/db": "*",
     "@spark/ai": "*",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "@vercel/blob": "^2.9.0",
+    "mammoth": "^1.13.0",
+    "fflate": "^0.8.3"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
