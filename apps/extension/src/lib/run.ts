@@ -6,7 +6,7 @@ import {
 } from "@spark/core";
 
 export type Phase = "prompt" | "do" | "check" | "confirm";
-export type StepResult = { id: string; type: Step["type"]; level?: Level; outcome: "right" | "miss" | "done" | "skipped"; seconds: number; hints: number; resolved?: boolean; note?: string | null };
+export type StepResult = { id: string; type: Step["type"]; level?: Level; outcome: "right" | "miss" | "done" | "skipped"; seconds: number; hints: number; resolved?: boolean; note?: string | null; less?: boolean };
 
 export type Run = {
   runId: string;
@@ -34,6 +34,8 @@ export type Run = {
   feed: { kind: "mistake" | "note"; say: string }[];
   results: StepResult[];
   lastNote: string | null;
+  /** The learner chose "Less help" on this step (the server replays it before the outcome). */
+  less?: boolean;
 };
 
 const now = () => Date.now();
@@ -55,7 +57,7 @@ const stepsOfRun = (run: Run, process: Process) => run.stepIds.map((id) => proce
 
 export function enterStep(run: Run, process: Process, levels: Levels) {
   const step = stepOf(run, process);
-  Object.assign(run, { stepStartedAt: now(), questions: [], qi: 0, picked: undefined, wrongAnswers: 0, askedHelp: false, mistakes: 0, hints: 0, feed: [], targetFound: null, resolved: false });
+  Object.assign(run, { stepStartedAt: now(), questions: [], qi: 0, picked: undefined, wrongAnswers: 0, askedHelp: false, mistakes: 0, hints: 0, feed: [], targetFound: null, resolved: false, less: false });
   if (!step) return;
   if (step.type !== "screen") { Object.assign(run, { level: undefined, phase: "confirm", spotlight: false }); return; }
   const level = partState(levels, process.id, step.id).level;
@@ -124,6 +126,7 @@ export function lessHelp(run: Run, process: Process, levels: Levels): Levels {
   const after = throttle(partState(levels, process.id, step.id), "less");
   const out: Levels = { ...levels, [process.id]: { ...levels[process.id], [step.id]: after } };
   run.level = after.level;
+  run.less = true;
   run.questions = []; run.qi = 0; run.picked = undefined; run.phase = "do";
   run.spotlight = after.level <= 2;
   run.feed.push({ kind: "note", say: `Less help now: ${["", "Guide", "Prompt", "On call", "Off"][after.level]}` });
@@ -140,10 +143,10 @@ export function advance(run: Run, process: Process, levels: Levels): { levels: L
     const level = run.level ?? 1;
     const outcome = outcomeOf(level, { wrongAnswers: run.wrongAnswers, askedHelp: run.askedHelp, mistakes: run.mistakes, retried: false });
     const before = partState(levels, process.id, step.id);
-    const after = throttle(before, outcome);
+    const after = throttle(before, outcome); // "Less help" was already applied to levels when chosen
     note = levelNote(before, after);
     out = { ...levels, [process.id]: { ...levels[process.id], [step.id]: after } };
-    run.results.push({ id: step.id, type: "screen", level, outcome, seconds, hints: run.hints, resolved: run.resolved, note });
+    run.results.push({ id: step.id, type: "screen", level, outcome, seconds, hints: run.hints, resolved: run.resolved, note, ...(run.less ? { less: true } : {}) });
   } else {
     run.results.push({ id: step.id, type: step.type, outcome: "done", seconds, hints: 0 });
   }

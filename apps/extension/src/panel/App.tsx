@@ -2,10 +2,10 @@
 // second person, one instruction at a time. Content is rendered as text only (never as HTML).
 import { LEVELS, meterLabel, partState, stepsFor, type Level, type Levels, type Process, type ScreenStep, type Step } from "@spark/core";
 import { useEffect, useMemo, useState } from "react";
-import { processes } from "../lib/content.ts";
+import { fromCache, patternFor, PLATFORM, themeFrom, type ContentCache } from "../lib/content.ts";
 import { send } from "../lib/messages.ts";
 import { runIndependence, type Run } from "../lib/run.ts";
-import { K } from "../lib/store.ts";
+import { K, type Session, type Status } from "../lib/store.ts";
 
 function useStored<T>(key: string, fallback: T): T {
   const [v, setV] = useState<T>(fallback);
@@ -23,14 +23,107 @@ function useStored<T>(key: string, fallback: T): T {
 export function App() {
   const run = useStored<Run | null>(K.run, null);
   const levels = useStored<Levels>(K.levels, {});
-  const process = run ? processes().find((p) => p.id === run.processId) : undefined;
+  const cache = useStored<ContentCache | null>(K.content, null);
+  const session = useStored<Session | null>(K.session, null);
+  const status = useStored<Status>(K.status, {});
+  const all = fromCache(cache);
+  const theme = themeFrom(cache);
+  const process = run ? all.find((p) => p.id === run.processId) : undefined;
+  useEffect(() => {
+    const r = document.documentElement.style;
+    r.setProperty("--accent", theme.accent); r.setProperty("--accent-ink", theme.accentInk); r.setProperty("--bg", theme.surface);
+    document.title = theme.displayName;
+  }, [theme.accent, theme.accentInk, theme.surface, theme.displayName]);
+  useEffect(() => { if (PLATFORM && session) void send({ t: "sync" } as never); }, [session?.token]);
   return (
     <div className="app">
-      <header className="top"><span className="mark" aria-hidden>✦</span> Spark</header>
-      {run && process && run.status === "active" ? <Coach run={run} process={process} />
+      <header className="top">
+        {theme.logo ? <img src={theme.logo} alt="" className="logo" /> : <span className="mark" aria-hidden>✦</span>} {theme.displayName}
+      </header>
+      {PLATFORM && !session ? <SignIn status={status} />
+        : run && process && run.status === "active" ? <Coach run={run} process={process} />
         : run && process && run.status === "complete" ? <Recap run={run} process={process} />
-        : <List levels={levels} />}
+        : <>
+            {PLATFORM && cache && <Systems domains={cache.approvedDomains} />}
+            <List levels={levels} all={all} />
+            {PLATFORM && session && <Footer session={session} status={status} />}
+          </>}
+      {PLATFORM && session && <Ask name={theme.displayName} />}
     </div>
+  );
+}
+
+function SignIn({ status }: { status: Status }) {
+  const [code, setCode] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const go = async (c?: string) => { setBusy(true); const r = await send<{ error?: string }>({ t: "signIn", ...(c ? { code: c } : {}) } as never); setBusy(false); setErr(r?.error ?? null); };
+  return (
+    <main>
+      <p>Sign in with your work account to get your company's coaches.</p>
+      {(err || status.error) && <p className="warn" role="alert">{err ?? status.error}</p>}
+      <button className="primary" disabled={busy} onClick={() => go()}>Sign in</button>
+      <details style={{ marginTop: 16 }}>
+        <summary>Have a sign-in code?</summary>
+        <label className="search"><span className="sr">Sign-in code</span><input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Paste the code" /></label>
+        <button disabled={busy || !code.trim()} onClick={() => go(code)} style={{ marginTop: 6 }}>Use code</button>
+      </details>
+    </main>
+  );
+}
+
+/** Optional host permissions: the learner allows Spark on their company's approved systems (one click). */
+function Systems({ domains }: { domains: string[] }) {
+  const origins = [...new Set(domains.map(patternFor))];
+  const [ok, setOk] = useState<boolean | null>(null);
+  useEffect(() => { void chrome.permissions.contains({ origins }).then(setOk); }, [origins.join()]);
+  if (ok !== false || !origins.length) return null;
+  return (
+    <aside className="callout">
+      <b>One more step.</b> Allow the coach to see labels and buttons on {domains.join(", ")}. It never reads what you type or what's on the record.
+      <div className="row"><button className="primary" onClick={async () => { const g = await chrome.permissions.request({ origins }); setOk(g); if (g) void send({ t: "systemsGranted" } as never); }}>Allow</button></div>
+    </aside>
+  );
+}
+
+function Footer({ session, status }: { session: Session; status: Status }) {
+  return (
+    <footer className="actions" style={{ fontSize: 12 }}>
+      <span className="facts" style={{ flex: 1 }}>{session.user.name} · {session.org.name}{status.queued ? ` · ${status.queued} run(s) waiting to sync` : ""}{status.error ? ` · ${status.error}` : ""}</span>
+      <button className="ghost" onClick={() => void send({ t: "sync" } as never)}>Refresh</button>
+      <button className="ghost" onClick={() => void send({ t: "signOut" } as never)}>Sign out</button>
+    </footer>
+  );
+}
+
+function Ask({ name }: { name: string }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [log, setLog] = useState<{ role: "user" | "assistant"; text: string; sources?: string[] }[]>([]);
+  const ask = async () => {
+    const question = q.trim(); if (!question) return;
+    setQ(""); setBusy(true);
+    const history = log.map(({ role, text }) => ({ role, text }));
+    setLog((l) => [...l, { role: "user", text: question }]);
+    const r = await send<{ text?: string; sources?: string[]; error?: string }>({ t: "ask", question, history } as never);
+    setLog((l) => [...l, { role: "assistant", text: r?.error ?? r?.text ?? "I couldn't answer that.", sources: r?.sources ?? [] }]);
+    setBusy(false);
+  };
+  if (!open) return <button className="ask-fab primary" onClick={() => setOpen(true)}>Ask {name}</button>;
+  return (
+    <section className="ask" aria-label={`Ask ${name}`}>
+      <div className="row" style={{ justifyContent: "space-between" }}><b>Ask {name}</b><button className="ghost" onClick={() => setOpen(false)} aria-label="Close">✕</button></div>
+      <div className="ask-log" aria-live="polite">
+        {log.length === 0 && <p className="facts">Ask about any of your company's processes. Answers come only from your company's coaches.</p>}
+        {log.map((m, i) => <p key={i} className={m.role}>{m.text}{m.sources?.length ? <span className="source"> Source: {m.sources.join(", ")}</span> : null}</p>)}
+        {busy && <p className="facts">Thinking…</p>}
+      </div>
+      <form className="row" onSubmit={(e) => { e.preventDefault(); void ask(); }}>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Type a question" aria-label="Your question" style={{ flex: 1 }} />
+        <button className="primary" disabled={busy}>Ask</button>
+      </form>
+    </section>
   );
 }
 
@@ -43,10 +136,9 @@ function Meter({ level }: { level: Level }) {
   );
 }
 
-function List({ levels }: { levels: Levels }) {
+function List({ levels, all }: { levels: Levels; all: Process[] }) {
   const [q, setQ] = useState("");
   const [dept, setDept] = useState<Record<string, string>>({});
-  const all = processes();
   const shown = useMemo(() => {
     const words = q.toLowerCase().split(/\s+/).filter(Boolean);
     return all.filter((p) => {
@@ -60,7 +152,8 @@ function List({ levels }: { levels: Levels }) {
         <span className="sr">Find a process</span>
         <input type="search" placeholder="Find a process" value={q} onChange={(e) => setQ(e.target.value)} />
       </label>
-      {!shown.length && <p className="muted">No process matches that. Try other words.</p>}
+      {!all.length && <p className="muted">No coaches published for you yet. Check back soon.</p>}
+      {all.length > 0 && !shown.length && <p className="muted">No process matches that. Try other words.</p>}
       <ul className="cards">
         {shown.map((p) => {
           const steps = stepsFor(p, dept[p.id] ?? p.departments?.[0]);

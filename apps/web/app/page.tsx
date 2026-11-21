@@ -1,12 +1,11 @@
-import { LEVELS } from "@spark/core";
+import { redirect } from "next/navigation";
+import { isSetUp } from "@spark/db";
+import { currentUser } from "../lib/session";
 
-export default function Home() {
-  return (
-    <main style={{ maxWidth: 640, margin: "64px auto", padding: "0 16px" }}>
-      <h1>Spark</h1>
-      <p>Build coaches that teach your people your own processes, in your own systems, with help that fades as they learn.</p>
-      <p>Studio, Insight and Admin are coming soon.</p>
-      <ul>{Object.values(LEVELS).map((l) => <li key={l.name}><b>{l.name}</b>: {l.says}</li>)}</ul>
-    </main>
-  );
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  if (!process.env.DATABASE_URL) return <main className="narrow"><h1>Spark</h1><p>The database isn't configured yet.</p></main>;
+  if (!(await isSetUp())) redirect("/setup");
+  redirect((await currentUser()) ? "/studio" : "/login");
 }

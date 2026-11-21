@@ -51,9 +51,10 @@ export class Overlay {
     win.addEventListener("resize", this.onMove, { passive: true });
   }
 
-  show(target: Element | null, label: string, text: string, spotlight: boolean) {
+  show(target: Element | null, label: string, text: string, spotlight: boolean, accent?: string) {
     if (!target) { this.hide(); return; }
     this.mount();
+    if (accent && /^#[0-9a-f]{6}$/i.test(accent)) this.host!.style.setProperty("--spark-accent", accent);
     const changed = target !== this.target;
     this.target = target;
     const b = this.doc.createElement("b"); b.textContent = label;

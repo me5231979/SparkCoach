@@ -123,6 +123,23 @@ d("database", () => {
     expect((await O.getOrg(acme.id))?.branding.displayName).toBe("Acme Coach");
   });
 
+  it("BYOK: the customer's key is encrypted, never returned, and used before any platform key", async () => {
+    process.env.SPARK_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString("base64");
+    expect(await O.aiCredentials(acme.id, undefined)).toBeNull();
+    expect(await O.aiCredentials(acme.id, "sk-ant-platform")).toBeNull(); // no Managed AI add-on → no platform key
+    await O.setPlan(acme.id, op.orgId, op.id, "platform", { managedAi: true });
+    expect(await O.aiCredentials(acme.id, "sk-ant-platform")).toMatchObject({ source: "managed" });
+    expect(await O.setAiSettings(acme.id, acmeAdmin.id, { key: "not-a-key" })).toMatchObject({ error: expect.any(String) });
+    const key = "sk-ant-api03-" + "x".repeat(40);
+    expect(await O.setAiSettings(acme.id, acmeAdmin.id, { key, model: "claude-opus-5-5" })).toEqual({ ok: true });
+    const creds = await O.aiCredentials(acme.id, "sk-ant-platform");
+    expect(creds).toEqual({ apiKey: key, model: "claude-opus-5-5", source: "customer" });
+    const raw = await system(async (tx) => (await tx<{ ai_key_enc: string }[]>`select ai_key_enc from orgs where id = ${acme.id}`)[0]!.ai_key_enc);
+    expect(raw).not.toContain("xxxx");
+    expect((await O.aiSettings(acme.id))?.keyHint).toMatch(/^sk-ant-…xxxx$/);
+    expect(await O.aiCredentials(globex.id, "sk-ant-platform")).toBeNull(); // another org never gets Acme's key
+  });
+
   // ── Tenant isolation: every data route gets a cross-tenant test (CLAUDE.md §4) ──────────────────────────────────
   it("Globex can't see or touch Acme's data", async () => {
     expect(await P.listProcesses(globex.id)).toEqual([]);

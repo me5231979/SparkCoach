@@ -28,7 +28,7 @@ function evaluate() {
   if (key !== stepKey) { stepKey = key; lastFound = null; clicked = []; clearTimeout(missingTimer); missingTimer = undefined; }
 
   const found = resolve(v.step.target, document);
-  if (v.spotlight && found) overlay.show(found.el, v.label, v.step.instruction, true);
+  if (v.spotlight && found) overlay.show(found.el, v.label, v.step.instruction, true, v.accent);
   else overlay.hide();
   reportFound(v.step.id, found?.strategy);
 

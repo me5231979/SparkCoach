@@ -112,14 +112,14 @@ export function toProcess(d: DraftOut, systems: string[]): Process {
   };
 }
 
-export type DraftInput = { notes: string; title?: string; systems: string[]; brandDocs: BrandDoc[]; displayName?: string; model?: string };
+export type DraftInput = { notes: string; title?: string; systems: string[]; brandDocs: BrandDoc[]; displayName?: string; model?: string; apiKey: string };
 
 export async function draftProcess(input: DraftInput): Promise<{ process: Process; warnings: string[] }> {
   if (!input.notes.trim()) throw new AiError("Paste your notes or job aid first.");
   if (input.notes.length > 200_000) throw new AiError("Those notes are too long. Paste one process at a time.");
   if (!input.systems.length) throw new AiError("Add at least one approved system under Settings first.");
   const brand = brandPrompt(input.brandDocs, input.displayName ? { displayName: input.displayName } : undefined);
-  const res = await anthropic().beta.messages.parse({
+  const res = await anthropic(input.apiKey).beta.messages.parse({
     model: input.model || DEFAULT_MODEL,
     max_tokens: 16000,
     betas: ["server-side-fallback-2026-07-01"],

@@ -11,7 +11,7 @@ const AskOut = z.object({
   sources: z.array(z.string()).describe("Exact titles of the coaches (or reference doc names) the answer came from"),
 });
 
-export type AskInput = { question: string; history: { role: "user" | "assistant"; text: string }[]; processes: Process[]; brandDocs: BrandDoc[]; displayName?: string; currentProcess?: string; currentStep?: string; model?: string };
+export type AskInput = { question: string; history: { role: "user" | "assistant"; text: string }[]; processes: Process[]; brandDocs: BrandDoc[]; displayName?: string; currentProcess?: string; currentStep?: string; model?: string; apiKey: string };
 
 export function contentBlock(processes: Process[], refs: BrandDoc[]): string {
   const p = processes.map((x) => `<coach title="${x.title.replace(/"/g, "")}">\nGoal: ${x.goal}\n${x.steps.map((s, i) => `${i + 1}. [${s.type}] ${s.title}: ${s.instruction}${s.why ? ` Why: ${s.why}` : ""}${s.type === "screen" && s.where ? ` Where: ${s.where}` : ""}`).join("\n")}\n${(x.callouts ?? []).map((c) => `${c.kind.toUpperCase()}: ${c.say}${c.source ? ` (source: ${c.source})` : ""}`).join("\n")}\n</coach>`).join("\n\n");
@@ -36,7 +36,7 @@ ${brandPrompt(input.brandDocs.filter((d) => d.kind !== "reference"), { displayNa
 ${contentBlock(input.processes, input.brandDocs)}
 </content>`;
   const where = input.currentProcess ? `\n(The learner is on "${input.currentProcess}"${input.currentStep ? `, step "${input.currentStep}"` : ""}.)` : "";
-  const res = await anthropic().beta.messages.parse({
+  const res = await anthropic(input.apiKey).beta.messages.parse({
     model: input.model || DEFAULT_MODEL,
     max_tokens: 2000,
     betas: ["server-side-fallback-2026-07-01"],

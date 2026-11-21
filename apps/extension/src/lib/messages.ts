@@ -8,7 +8,12 @@ export type PanelMsg =
   | { t: "next" }               // continue after seeing an answer
   | { t: "askHelp" }
   | { t: "lessHelp" }
-  | { t: "exit" };
+  | { t: "exit" }
+  | { t: "signIn"; code?: string }   // code: the manual fallback (paste from the web page)
+  | { t: "signOut" }
+  | { t: "sync" }
+  | { t: "systemsGranted" }        // the panel got host permissions for the approved systems
+  | { t: "ask"; question: string; history: { role: "user" | "assistant"; text: string }[] };
 
 export type ContentMsg =
   | { t: "hello" }
@@ -17,7 +22,7 @@ export type ContentMsg =
   | { t: "target"; stepId: string; found: boolean; strategy?: string };
 
 /** What the worker tells the run's tab: which step to watch, and whether to spotlight it. Null = do nothing. */
-export type TabView = { runId: string; processId: string; systems: string[]; index: number; step: ScreenStep; spotlight: boolean; label: string } | null;
+export type TabView = { runId: string; processId: string; systems: string[]; index: number; step: ScreenStep; spotlight: boolean; label: string; accent?: string } | null;
 export type WorkerMsg = { t: "view"; view: TabView };
 
 export type Msg = PanelMsg | ContentMsg;

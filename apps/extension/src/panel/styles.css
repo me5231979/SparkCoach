@@ -41,3 +41,12 @@ button:disabled { cursor: default; }
 .row, .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .actions { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 16px; }
 .prep p { margin: 4px 0; }
+.top .logo { height: 22px; width: auto; max-width: 120px; object-fit: contain; vertical-align: middle; }
+body { background: var(--bg); }
+.ask-fab { position: fixed; right: 14px; bottom: 14px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+.ask { position: fixed; left: 8px; right: 8px; bottom: 8px; max-height: 70vh; display: flex; flex-direction: column; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.22); }
+.ask-log { overflow: auto; flex: 1; }
+.ask-log p { margin: 6px 0; padding: 6px 8px; border-radius: 8px; }
+.ask-log p.user { background: var(--bg); }
+.ask input { padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+details summary { cursor: pointer; color: var(--muted); font-size: 13px; }

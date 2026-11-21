@@ -13,7 +13,10 @@
     "@spark/core": "*",
     "next": "^16.4.6",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "@spark/db": "*",
+    "@spark/ai": "*",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
